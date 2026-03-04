@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  background: #0e0f15;
+  font-family: Arial;
+  color: white;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.player {
+  background: #1f2433;
+  padding: 40px;
+  border-radius: 10px;
+}
