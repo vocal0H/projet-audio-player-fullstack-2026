@@ -23,25 +23,53 @@ const redisClient = redis.createClient({
   url: "redis://redis:6379",
 });
 
-await redisClient.connect();
+redisClient.connect();
+
+let currentTrackIndex = 0;
 
 app.get("/stream", async (req, res) => {
-  const result = await pool.query("SELECT * FROM tracks");
-  const tracks = result.rows;
+  try {
 
-  if (!tracks.length) return res.send("No tracks");
+    const result = await pool.query("SELECT * FROM tracks ORDER BY id");
+    const tracks = result.rows;
 
-  const random = tracks[Math.floor(Math.random() * tracks.length)];
+    if (!tracks.length) {
+      return res.status(404).send("No tracks available");
+    }
 
-  await pool.query("INSERT INTO history (track_id) VALUES ($1)", [random.id]);
+    const track = tracks[currentTrackIndex];
 
-  const filePath = path.resolve(random.file_path);
+    currentTrackIndex++;
 
-  res.setHeader("Content-Type", "audio/mpeg");
-  fs.createReadStream(filePath).pipe(res);
+    // L’index se réinitialise à zéro seulement après avoir atteint la fin :
+    if (currentTrackIndex >= tracks.length) {
+      currentTrackIndex = 0;
+    }
+
+    await pool.query(
+      "INSERT INTO history (track_id) VALUES ($1)",
+      [track.id]
+    );
+
+    const filePath = path.resolve(track.file_path);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send("Audio file not found");
+    }
+
+    res.setHeader("Content-Type", "audio/mpeg");
+
+    const stream = fs.createReadStream(filePath);
+    stream.pipe(res);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+  }
 });
 
 app.get("/history", async (req, res) => {
+
   const result = await pool.query(`
     SELECT tracks.title, tracks.artist 
     FROM history
@@ -49,6 +77,7 @@ app.get("/history", async (req, res) => {
     ORDER BY history.played_at DESC
     LIMIT 10
   `);
+
   res.json(result.rows);
 });
 

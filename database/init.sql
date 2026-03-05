@@ -4,6 +4,9 @@ CREATE TABLE users (
     password TEXT NOT NULL
 );
 
+
+
+
 CREATE TABLE tracks (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255),
@@ -15,6 +18,9 @@ INSERT INTO tracks (title, artist, file_path)
 VALUES
 ('idm', 'Pixabay', '/app/media/mp3/evgeny_bardyuza-everything-feels-new.mp3'),
 ('idm2', 'Pixabay', '/app/media/mp3/musinova-playful-glitch-idm-electronic.mp3');
+
+
+
 
 CREATE TABLE history (
     id SERIAL PRIMARY KEY,
